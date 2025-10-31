@@ -1,75 +1,61 @@
 <script setup>
-import blogPost from './subcomponents/BlogPost2.vue'
-import axios from 'axios'
+    // Import BlogPost component
+    import blogPost from './subcomponents/BlogPost2.vue'
+	import axios from 'axios'
 </script>
 
 <script>
-export default {
-  data() {
-    return {
-      posts: [] // list of blog post objects
+    export default {
+        data() {
+            return {
+                posts: [] // array of post objects
+            }  
+        },
+        computed: {
+            baseUrl() {
+                if (window.location.hostname == 'localhost')
+                    return 'http://localhost:3000'
+                else {
+                    const codespace_host = window.location.hostname.replace('5173', '3000')
+                    return `https://${codespace_host}`;
+                }
+            }
+        },
+        created() { // created is a hook that executes as soon as Vue instance is created
+            axios.get(`${this.baseUrl}/posts`)
+            .then(response => {
+                // this gets the data, which is an array
+                this.posts = response.data
+                console.log(response.data)
+            })
+            .catch(error => {
+                this.posts = [{ entry: 'There was an error: ' + error.message }]
+            })
+        },
+        methods: {
+            deletePost(id) {
+                axios.get(`${this.baseUrl}/deletePost`, { params: { id: id } })
+                .then(() => {
+                    // Remove the deleted post locally
+                    this.posts = this.posts.filter(post => post.id !== id)
+                    console.log(`Deleted post with ID ${id}`)
+                })
+                .catch(error => {
+                    console.error('Error deleting post:', error)
+                })
+            }
+            },
+        components:{
+            blogPost
+        }
     }
-  },
-  components: {
-    blogPost
-  },
-  computed: {
-    baseUrl() {
-      if (window.location.hostname === 'localhost') {
-        return 'http://localhost:3000'
-      } else {
-        const codespace_host = window.location.hostname.replace('5173', '3000')
-        return `https://${codespace_host}`
-      }
-    }
-  },
-  async created() {
-    try {
-      const response = await axios.get(`${this.baseUrl}/posts`)
-      this.posts = response.data
-    } catch (error) {
-      this.posts = [{ entry: 'There was an error: ' + error.message }]
-    }
-  },
-  methods: {
-    async deletePost(id) {
-      try {
-        // Delete post by ID
-        await axios.get(`${this.baseUrl}/deletePost`, { params: { id } })
-
-        // Fetch updated posts
-        const response = await axios.get(`${this.baseUrl}/posts`)
-        this.posts = [...response.data] // trigger reactivity
-
-        // Let Vue update DOM before Playwright checks
-        await this.$nextTick()
-        await new Promise(resolve => setTimeout(resolve, 100))
-      } catch (error) {
-        console.error('Error deleting post:', error)
-      }
-    }
-  }
-}
 </script>
 
 <template>
-  <div>
-    <!-- render each post with blogPost component -->
-    <blog-post
-      v-for="post in posts"
-      :key="post.id"
-      :subject="post.subject"
-      :entry="post.entry"
-      :mood="post.mood"
-    >
-      <template #default>
-        <button
-          class="btn btn-primary mt-2"
-          @click="deletePost(post.id)"
-        >
-          Delete
-        </button>
-      </template>
-    </blog-post>
-  </div>
+   <!-- TODO: make use of the 'blog-post' component to display the blog posts -->
+    <blogPost v-for="post in posts" :mood="post.mood" :entry="post.entry" :subject="post.subject" :id="post.id">
+        <button class="btn btn-primary" @click="deletePost(post.id)">Delete</button>
+    </blogPost> 
+
 </template>
+
