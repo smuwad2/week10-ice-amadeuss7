@@ -11,6 +11,9 @@
                 posts: [] // array of post objects
             }  
         },
+         components:{
+            blogPost
+        },
         computed: {
             baseUrl() {
                 if (window.location.hostname == 'localhost')
@@ -33,8 +36,19 @@
             })
         },
         methods: {
-            deletePost(id) {
-                // TODO: Complete the delete method
+            async deletePost(id) {
+                try {
+                    await axios.get(`${this.baseUrl}/deletePost`, {
+                        params: { id: id }
+                    });
+                    const response = await axios.get(`${this.baseUrl}/posts`);
+                    this.posts = [];
+                    await this.$nextTick();
+                    this.posts = response.data;
+                    await this.$nextTick();
+                } catch (error) {
+                    console.error('Error deleting post:', error);
+                }
             }
         }
     }
@@ -42,6 +56,10 @@
 
 <template>
    <!-- TODO: make use of the 'blog-post' component to display the blog posts -->
+ <blog-post v-for="post in posts" :subject="post.subject"
+    :entry="post.entry" :mood="post.mood" :key="post.id">
+    <button class="btn btn-primary"@click=deletePost(post.id)>Delete</button>
 
+    </blog-post>
 </template>
 

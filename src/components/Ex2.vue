@@ -8,6 +8,9 @@
                 posts: [] // array of post objects
             }  
         },
+        components:{
+            blogPost
+        },
         computed: {
             baseUrl() {
                 if (window.location.hostname=='localhost')
@@ -33,7 +36,12 @@
 </script>
 
 <template>
+    <!-- rmb to run npm run backend  -->
    <!-- TODO: make use of the 'blog-post' component to display the blog posts -->
+    <blog-post v-for="post in posts" :subject="post.subject"
+    :entry="post.entry" :mood="post.mood" :key="post.id">
 
+
+    </blog-post>
 </template>
 
